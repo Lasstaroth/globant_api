@@ -23,6 +23,15 @@ def read_departments(db: Session):
 def read_jobs(db: Session):
     return db.query(models.Job).all()
 
+def get_hired_employee_by_id(db: Session, employee_id: int):
+    return db.query(models.HiredEmployee).filter(models.HiredEmployee.id == employee_id).first()
+
+def get_hired_employees_by_department(db: Session, department_id: int):
+    return db.query(models.HiredEmployee).filter(models.HiredEmployee.department_id == department_id).all()
+
+def get_hired_employees_by_job(db: Session, job_id: int):
+    return db.query(models.HiredEmployee).filter(models.HiredEmployee.job_id == job_id).all()
+
 def read_hired_employees_per_quarter(db: Session):
     query = """
     SELECT d.department, j.job,
