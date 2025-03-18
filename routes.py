@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, UploadFile, File
 from sqlalchemy.orm import Session
 import pandas as pd
-import crud, database
+import crud, database, schemas
 
 router = APIRouter()
 
@@ -61,6 +61,32 @@ async def upload_csv(
 
     return {"message": "CSV files uploaded successfully"}
 
+@router.get("/employees")
+def get_hired_employees(db: Session = Depends(database.get_db)):
+    return crud.get_hired_employees(db)
+
+@router.get("/departments")
+def get_departments(db: Session = Depends(database.get_db)):
+    return crud.get_departments(db)
+
+@router.get("/jobs")
+def get_jobs(db: Session = Depends(database.get_db)):
+    return crud.get_jobs(db)
+
+@router.get("/employees/{employee_id}", response_model=schemas.HiredEmployeeResponse)
+def get_hired_employee_by_id(employee_id: int, db: Session = Depends(database.get_db)):
+    employee = crud.get_hired_employee_by_id(db, employee_id)
+    if employee is None:
+        return {"error": "Employee not found"}
+    return employee
+
+@router.get("/employees/department/{department_id}", response_model=list[schemas.HiredEmployeeResponse])
+def get_hired_employees_by_department(department_id: int, db: Session = Depends(database.get_db)):
+    return crud.get_hired_employees_by_department(db, department_id)
+
+@router.get("/employees/job/{job_id}", response_model=list[schemas.HiredEmployeeResponse])
+def get_hired_employees_by_job(job_id: int, db: Session = Depends(database.get_db)):
+    return crud.get_hired_employees_by_job(db, job_id)
 
 @router.get("/employees-per-quarter")
 def employees_per_quarter(db: Session = Depends(database.get_db)):

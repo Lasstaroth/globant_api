@@ -14,13 +14,13 @@ def insert_jobs(db: Session, jobs: list):
     db.bulk_insert_mappings(models.Job, jobs)
     db.commit()
 
-def read_hired_employees(db: Session):
+def get_hired_employees(db: Session):
     return db.query(models.HiredEmployee).all()
 
-def read_departments(db: Session):
+def get_departments(db: Session):
     return db.query(models.Department).all()
 
-def read_jobs(db: Session):
+def get_jobs(db: Session):
     return db.query(models.Job).all()
 
 def get_hired_employee_by_id(db: Session, employee_id: int):
@@ -87,5 +87,5 @@ def read_hired_employees_per_department_per_year_gt_2021(db: Session):
     """
     return db.execute(query).fetchall()
 
-def custom_query(db: Session, query: str):
+def read_custom_query(db: Session, query: str):
     return db.execute(query).fetchall()
