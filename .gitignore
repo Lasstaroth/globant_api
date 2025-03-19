@@ -26,3 +26,6 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 cover/
+
+# Database
+*.db
