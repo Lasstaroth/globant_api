@@ -1,65 +1,75 @@
 from fastapi import APIRouter, Depends, UploadFile, File
 from sqlalchemy.orm import Session
 import pandas as pd
-import crud, database, schemas
-
+import crud, database, schemas, models
+from schemas import HiredEmployeeCreate
 router = APIRouter()
 
 @router.post("/upload-departments")
 async def upload_departments(file: UploadFile = File(...), db: Session = Depends(database.get_db)):
-    # curl -X 'POST' 'http://localhost:8000/upload-departments' -F 'file=@departments.csv'
-    df = pd.read_csv(file.file)
+    # curl -X 'POST' 'http://localhost:8000/upload-departments' -F 'file=@data/departments.csv'
+    df = pd.read_csv(file.file, names=["id", "department"], header=None)
     departments = df.to_dict(orient="records")
     crud.insert_departments(db, departments)
     return {"message": "Departments uploaded successfully"}
 
 @router.post("/upload-jobs")
 async def upload_jobs(file: UploadFile = File(...), db: Session = Depends(database.get_db)):
-    # curl -X 'POST' 'http://localhost:8000/upload-jobs' -F 'file=@jobs.csv'
-    df = pd.read_csv(file.file)
+    # curl -X 'POST' 'http://localhost:8000/upload-jobs' -F 'file=@data/jobs.csv'
+    df = pd.read_csv(file.file, names=["id", "job"], header=None)
     jobs = df.to_dict(orient="records")
     crud.insert_jobs(db, jobs)
     return {"message": "Jobs uploaded successfully"}
 
-@router.post("/upload-employees")
+@router.post("/upload-employees-dropna")
 async def upload_employees(file: UploadFile = File(...), db: Session = Depends(database.get_db)):
-    # curl -X 'POST' 'http://localhost:8000/upload-employees' -F 'file=@hired_employees.csv'
-    df = pd.read_csv(file.file)
+    # curl -X 'POST' 'http://localhost:8000/upload-employees' -F 'file=@data/hired_employees.csv'
+    df = pd.read_csv(file.file, names=["id","name","datetime","department_id","job_id"], header=None)
+
+    # Convertir strings a datetime
+    df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce", utc=True)
+    df["datetime"] = df["datetime"].dt.tz_convert(None)
+
+    df = df.dropna()
+
     employees = df.to_dict(orient="records")
     crud.insert_hired_employees(db, employees)
     return {"message": "Employees uploaded successfully"}
 
-@router.post("/upload")
-async def upload_csv(
-    departments_file: UploadFile = File(None),
-    jobs_file: UploadFile = File(None),
-    employees_file: UploadFile = File(None),
-    db: Session = Depends(database.get_db)
-):
-    """
-    curl -X 'POST' 'http://localhost:8000/upload' \
-    -H 'accept: application/json' \
-    -H 'Content-Type: multipart/form-data' \
-    -F 'departments_file=@departments.csv' \
-    -F 'jobs_file=@jobs.csv' \
-    -F 'employees_file=@hired_employees.csv'
-    """        
-    if departments_file:
-        df_departments = pd.read_csv(departments_file.file)
-        departments = df_departments.to_dict(orient="records")
-        crud.insert_departments(db, departments)
+@router.post("/upload-employees-ToDo")
+async def upload_employees(file: UploadFile = File(...), db: Session = Depends(database.get_db)):
+    df = pd.read_csv(
+        file.file,
+        names=["id", "name", "datetime", "department_id", "job_id"],
+        header=None,
+        parse_dates=["datetime"], 
+        na_values=["NaN","N/A","null"]
+    )
 
-    if jobs_file:
-        df_jobs = pd.read_csv(jobs_file.file)
-        jobs = df_jobs.to_dict(orient="records")
-        crud.insert_jobs(db, jobs)
+    # # Eliminar filas con valores NaN en 'department_id' y 'job_id'
+    # df = df.dropna(subset=["department_id", "job_id"])
+    
+    # Convertir strings a datetime
+    df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce", utc=True)
+    df["datetime"] = df["datetime"].dt.tz_convert(None)
 
-    if employees_file:
-        df_employees = pd.read_csv(employees_file.file)
-        employees = df_employees.to_dict(orient="records")
-        crud.insert_hired_employees(db, employees)
+    # Rellena NaN en 'name'
+    df["name"] = df["name"].fillna("Unknown")
 
-    return {"message": "CSV files uploaded successfully"}
+    # Convertimos cada fila del DataFrame en un dict
+    rows = df.to_dict(orient="records")
+
+    validated_rows = []
+    for row in rows:
+        # Aquí Pydantic validará y aplicará el validador handle_nan
+        hired_employee = HiredEmployeeCreate(**row)
+        # hired_employee.dict() retorna un diccionario con valores finales ya "limpios"
+        validated_rows.append(hired_employee.dict())
+
+    # Inserción masiva directamente con bulk_insert_mappings
+    crud.insert_hired_employees(db, validated_rows)
+    
+    return {"message": "Employees uploaded successfully"}
 
 @router.get("/employees")
 def get_hired_employees(db: Session = Depends(database.get_db)):
