@@ -5,6 +5,7 @@ import crud, database, schemas, models
 from schemas import HiredEmployeeCreate
 router = APIRouter()
 
+
 @router.post("/upload-departments")
 async def upload_departments(file: UploadFile = File(...), db: Session = Depends(database.get_db)):
     # curl -X 'POST' 'http://localhost:8000/upload-departments' -F 'file=@data/departments.csv'
@@ -13,6 +14,7 @@ async def upload_departments(file: UploadFile = File(...), db: Session = Depends
     crud.insert_departments(db, departments)
     return {"message": "Departments uploaded successfully"}
 
+
 @router.post("/upload-jobs")
 async def upload_jobs(file: UploadFile = File(...), db: Session = Depends(database.get_db)):
     # curl -X 'POST' 'http://localhost:8000/upload-jobs' -F 'file=@data/jobs.csv'
@@ -20,6 +22,7 @@ async def upload_jobs(file: UploadFile = File(...), db: Session = Depends(databa
     jobs = df.to_dict(orient="records")
     crud.insert_jobs(db, jobs)
     return {"message": "Jobs uploaded successfully"}
+
 
 @router.post("/upload-employees-dropna")
 async def upload_employees(file: UploadFile = File(...), db: Session = Depends(database.get_db)):
@@ -35,6 +38,7 @@ async def upload_employees(file: UploadFile = File(...), db: Session = Depends(d
     employees = df.to_dict(orient="records")
     crud.insert_hired_employees(db, employees)
     return {"message": "Employees uploaded successfully"}
+
 
 @router.post("/upload-employees-ToDo")
 async def upload_employees(file: UploadFile = File(...), db: Session = Depends(database.get_db)):
@@ -71,17 +75,21 @@ async def upload_employees(file: UploadFile = File(...), db: Session = Depends(d
     
     return {"message": "Employees uploaded successfully"}
 
+
 @router.get("/employees")
 def get_hired_employees(db: Session = Depends(database.get_db)):
     return crud.get_hired_employees(db)
+
 
 @router.get("/departments")
 def get_departments(db: Session = Depends(database.get_db)):
     return crud.get_departments(db)
 
+
 @router.get("/jobs")
 def get_jobs(db: Session = Depends(database.get_db)):
     return crud.get_jobs(db)
+
 
 @router.get("/employees/{employee_id}", response_model=schemas.HiredEmployeeResponse)
 def get_hired_employee_by_id(employee_id: int, db: Session = Depends(database.get_db)):
@@ -90,14 +98,32 @@ def get_hired_employee_by_id(employee_id: int, db: Session = Depends(database.ge
         return {"error": "Employee not found"}
     return employee
 
+
 @router.get("/employees/department/{department_id}", response_model=list[schemas.HiredEmployeeResponse])
 def get_hired_employees_by_department(department_id: int, db: Session = Depends(database.get_db)):
     return crud.get_hired_employees_by_department(db, department_id)
+
 
 @router.get("/employees/job/{job_id}", response_model=list[schemas.HiredEmployeeResponse])
 def get_hired_employees_by_job(job_id: int, db: Session = Depends(database.get_db)):
     return crud.get_hired_employees_by_job(db, job_id)
 
-@router.get("/employees-per-quarter")
+
+@router.get("/sqlite/employees-per-quarter")
 def employees_per_quarter(db: Session = Depends(database.get_db)):
-    return crud.read_hired_employees_per_quarter(db)
+    return crud.read_sqlite_hired_employees_per_quarter(db)
+
+
+@router.get("/sqlite/departments-hired-above-mean")
+def departments_hired_above_mean(db: Session = Depends(database.get_db)):
+    return crud.read_sqlite_departments_hired_above_mean(db)
+
+
+@router.get("/postgres/employees-per-quarter")
+def employees_per_quarter(db: Session = Depends(database.get_db)):
+    return crud.read_sqlite_hired_employees_per_quarter(db)
+
+
+@router.get("/postgres/departments-hired-above-mean")
+def departments_hired_above_mean(db: Session = Depends(database.get_db)):
+    return crud.read_sqlite_departments_hired_above_mean(db)
