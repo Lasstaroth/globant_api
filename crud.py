@@ -285,7 +285,7 @@ def read_custom_query(db: Session, query: str):
 
     # return db.execute(query).fetchall() # # optional
 
-    rows = db.execute(query).fetchall()
+    rows = db.execute(text(query)).fetchall()
 
     # Convertir cada fila de SQLAlchemy en un diccionario para JSON
     results = []    

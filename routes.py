@@ -127,3 +127,8 @@ def employees_per_quarter(db: Session = Depends(database.get_db)):
 @router.get("/postgres/departments-hired-above-mean")
 def departments_hired_above_mean(db: Session = Depends(database.get_db)):
     return crud.read_postgres_departments_hired_above_mean(db)
+
+@router.get("/custom-query/")
+def run_custom_query(query: str, db: Session = Depends(database.get_db)):
+    return crud.read_custom_query(db, query)
+    
