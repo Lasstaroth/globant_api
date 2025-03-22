@@ -30,7 +30,7 @@ async def upload_employees(file: UploadFile = File(...), db: Session = Depends(d
     df = pd.read_csv(file.file, names=["id","name","datetime","department_id","job_id"], header=None)
 
     # Convertir strings a datetime
-    df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce", utc=True)
+    df["datetime"] = pd.to_datetime(df["datetime"], format="%Y-%m-%dT%H:%M:%SZ", errors="coerce", utc=True)
     df["datetime"] = df["datetime"].dt.tz_convert(None)
 
     df = df.dropna()

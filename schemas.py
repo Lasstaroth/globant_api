@@ -1,6 +1,5 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator, ConfigDict
 from datetime import datetime
-from pydantic import validator
 import math
 
 class HiredEmployeeCreate(BaseModel):
@@ -10,15 +9,15 @@ class HiredEmployeeCreate(BaseModel):
     department_id: int
     job_id: int
 
-    @validator("id", "department_id", "job_id", pre=True)
+    @field_validator("id", "department_id", "job_id") #@validator deprecated
     def handle_nan_for_ints(cls, value):
         if isinstance(value, float) and math.isnan(value):
             return 0
         return value
 
 class HiredEmployeeResponse(HiredEmployeeCreate):
-    class Config:
-        orm_mode = True        
+    model_config = ConfigDict(from_attributes=True)
+    # class Config: orm_mode = True #deprecated 
 
 class DepartmentCreate(BaseModel):
     id: int

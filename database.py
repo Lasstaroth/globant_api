@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+# from sqlalchemy.ext.declarative import declarative_base #deprecated
+from sqlalchemy.orm import sessionmaker, declarative_base
 
 # DATABASE_URL = "postgresql://postgres:admin@localhost:5433/globant_db"
 DATABASE_URL = "sqlite:///./globant_db.db"
