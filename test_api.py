@@ -4,6 +4,8 @@ from database import Base, engine
 from fastapi.testclient import TestClient
 from main import app
 
+ENV = os.getenv("ENV", "dev")
+
 client = TestClient(app)
 
 
@@ -12,6 +14,7 @@ def setup_test_environment():
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     yield
+    Base.metadata.drop_all(bind=engine)
 
 
 def test_root_route(setup_test_environment):
@@ -61,7 +64,7 @@ def test_upload_jobs(setup_test_environment, tmp_path):
     assert response.json() == {"message": "Jobs uploaded successfully"}
 
 
-def test_upload_csv():
+def test_upload_employees():
     """Verify that a CSV can be uploaded to "/upload-employees-dropna" correctly"""
     file_data = "id,name,datetime,department_id,job_id\n999,John Doe,2021-07-27T16:02:08Z,1,2"
     response = client.post("/upload-employees-dropna", files={"file": ("hired_employees.csv", file_data)})
@@ -71,7 +74,10 @@ def test_upload_csv():
 
 def test_employees_per_quarter(setup_test_environment):
     """Test the endpoint of employees hired by quarter"""
-    response = client.get("/sqlite/employees-per-quarter")
+    if ENV == "test":
+        response = client.get("/sqlite/employees-per-quarter")
+    else:
+        response = client.get("/postgres/employees-per-quarter")
     assert response.status_code == 200
     data = response.json()
     assert isinstance(data, list)
@@ -79,7 +85,10 @@ def test_employees_per_quarter(setup_test_environment):
 
 def test_departments_above_average():
     """Test the department endpoint on the average hiring rate"""
-    response = client.get("/sqlite/departments-hired-above-mean")
+    if ENV == "test":
+        response = client.get("/sqlite/departments-hired-above-mean")
+    else:
+        response = client.get("/postgres/departments-hired-above-mean")
     assert response.status_code == 200
     data = response.json()
     assert isinstance(data, list)
