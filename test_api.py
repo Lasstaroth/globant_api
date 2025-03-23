@@ -72,6 +72,33 @@ def test_upload_employees():
     assert response.json() == {"message": "Employees uploaded successfully"}
 
 
+def test_get_departments(setup_test_environment):
+    """Test the endpoint of departments"""
+    response = client.get("/departments")    
+    # Check answer
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+
+
+def test_get_jobs(setup_test_environment):
+    """Test the endpoint of jobs"""
+    response = client.get("/jobs")
+    # Check answer
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+
+
+def test_get_employees(setup_test_environment):
+    """Test the endpoint of employees"""
+    response = client.get("/employees")
+    # Check answer
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+
+
 def test_employees_per_quarter(setup_test_environment):
     """Test the endpoint of employees hired by quarter"""
     if ENV == "test":
