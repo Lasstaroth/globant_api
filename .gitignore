@@ -30,6 +30,3 @@ cover/
 # Database / Data
 *.db
 data/*.csv
-
-# Test
-*.ipynb
