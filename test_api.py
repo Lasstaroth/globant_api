@@ -1,8 +1,8 @@
 import os
 import pytest
+from main import app
 from database import Base, engine
 from fastapi.testclient import TestClient
-from main import app
 
 ENV = os.getenv("ENV", "dev")
 
@@ -66,10 +66,49 @@ def test_upload_jobs(setup_test_environment, tmp_path):
 
 def test_upload_employees():
     """Verify that a CSV can be uploaded to "/upload-employees-dropna" correctly"""
-    file_data = "id,name,datetime,department_id,job_id\n999,John Doe,2021-07-27T16:02:08Z,1,2"
+    file_data = "id,name,datetime,department_id,job_id\n1003,John Doe,2021-07-27T16:02:08Z,1,2"
     response = client.post("/upload-employees-dropna", files={"file": ("hired_employees.csv", file_data)})
     assert response.status_code == 200
     assert response.json() == {"message": "Employees uploaded successfully"}
+
+
+def test_batch_insert_employees(setup_test_environment):
+    """Test JSON batch insertion of up to 1000 employees"""
+    payload = [
+        {
+            "id": 9000,
+            "name": "Batch Tester",
+            "datetime": "2021-07-27T16:02:08Z",
+            "department_id": 1,
+            "job_id": 1
+        },
+        {
+            "id": 9001,
+            "name": "Another Tester",
+            "datetime": "2021-08-01T10:45:00Z",
+            "department_id": 2,
+            "job_id": 2
+        }
+    ]
+
+    response = client.post("/employees/batch", json=payload)
+    assert response.status_code == 200
+    assert response.json()["message"] == "2 employees inserted successfully"
+
+
+def test_batch_insert_over_limit(setup_test_environment):
+    """Test that inserting more than 1000 employees returns an error"""
+    payload = [{
+        "id": i,
+        "name": f"User {i}",
+        "datetime": "2021-01-01T00:00:00Z",
+        "department_id": 1,
+        "job_id": 1
+    } for i in range(1, 1002)]  # 1001 registros
+
+    response = client.post("/employees/batch", json=payload)
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Cannot insert more than 1000 employees in one batch"
 
 
 def test_get_departments(setup_test_environment):

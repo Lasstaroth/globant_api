@@ -1,8 +1,11 @@
-from fastapi import APIRouter, Depends, UploadFile, File
-from sqlalchemy.orm import Session
 import pandas as pd
-import crud, database, schemas, models
+import crud, database, schemas
+from typing import List
+from sqlalchemy.orm import Session
 from schemas import HiredEmployeeCreate
+from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
+
+
 router = APIRouter()
 
 
@@ -38,6 +41,21 @@ async def upload_employees(file: UploadFile = File(...), db: Session = Depends(d
     employees = df.to_dict(orient="records")
     crud.insert_hired_employees(db, employees)
     return {"message": "Employees uploaded successfully"}
+
+
+@router.post("/employees/batch")
+def insert_employees_batch(
+    employees: List[HiredEmployeeCreate],
+    db: Session = Depends(database.get_db)
+):
+    if len(employees) > 1000:
+        raise HTTPException(status_code=400, detail="Cannot insert more than 1000 employees in one batch")
+
+    employee_dicts = [emp.model_dump() for emp in employees]
+    crud.insert_hired_employees(db, employee_dicts)
+
+    return {"message": f"{len(employee_dicts)} employees inserted successfully"}
+
 
 
 @router.post("/upload-employees-ToDo")
