@@ -1,0 +1,15 @@
+# Ignorar entornos virtuales
+.venv
+venv
+
+# Ignorar archivos de cache
+__pycache__
+*.pyc
+
+# Ignorar configuraciones de IDE
+.vscode
+.idea
+
+# Ignorar el control de versiones
+.git
+.gitignore
