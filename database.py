@@ -7,10 +7,13 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 ENV = os.getenv("ENV", "dev")
 
 
+
 if ENV == "test":
     DATABASE_URL = "sqlite:///./globant_db.db"
-else:
+elif ENV == "prod":
     DATABASE_URL = "postgresql://postgres:admin@localhost:5433/globant_db"
+else:
+    DATABASE_URL = os.getenv("DATABASE_URL")
 
 
 engine = create_engine(DATABASE_URL)

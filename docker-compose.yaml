@@ -1,16 +1,29 @@
-version: '3'
+version: "3.9"
+
 services:
-  api:
-    build: .
-    ports:
-      - "8000:8000"
-    environment:
-      - DATABASE_URL=postgresql://postgres:admin@localhost:5433/globant_db
   db:
     image: postgres:16
+    restart: always
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: admin
+      POSTGRES_USER: api_user
+      POSTGRES_PASSWORD: api_pass
       POSTGRES_DB: globant_db
     ports:
-      - "5433:5433"
+      - "5434:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  app:
+    build: .
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql://api_user:api_pass@db:5432/globant_db
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/globant_api
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+volumes:
+  pgdata:

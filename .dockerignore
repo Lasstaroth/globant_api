@@ -13,3 +13,6 @@ __pycache__
 # Ignorar el control de versiones
 .git
 .gitignore
+
+
+*.ipynb

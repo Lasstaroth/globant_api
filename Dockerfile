@@ -1,19 +1,14 @@
-# Imagen base
-FROM python:3.9
+FROM python:3.10-slim
 
-# Fijar directorio de trabajo
-WORKDIR /app
+WORKDIR /globant_api
 
-# Instalar dependencias
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copiar archivos de la API
 COPY . .
 
-# Exponer el puerto en el que corre FastAPI
+RUN apt-get update && apt-get install -y curl build-essential && \
+    curl https://sh.rustup.rs -sSf | sh -s -- -y && \
+    . "$HOME/.cargo/env" && \
+    pip install --no-cache-dir -r requirements.txt
+
 EXPOSE 8000
 
-# Comando para ejecutar la API
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
-# CMD ["gunicorn", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "main:app"] # mas robusto
